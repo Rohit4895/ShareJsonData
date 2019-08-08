@@ -2,8 +2,13 @@ package com.example.sharejsondata;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.content.Context;
+import android.net.wifi.WifiManager;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -26,6 +31,7 @@ public class ServerActivity extends AppCompatActivity implements View.OnClickLis
     private EditText firstName, lastName;
     private String strFirstName="", strLastName="";
     private TextView status;
+    private WifiManager wifiManager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -37,9 +43,35 @@ public class ServerActivity extends AppCompatActivity implements View.OnClickLis
         lastName = findViewById(R.id.lastName);
         status = findViewById(R.id.status);
 
+        wifiManager = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
+
         status.setText(getIpAddress());
 
         send.setOnClickListener(this);
+    }
+
+    private void turnOnHotspot(){
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            wifiManager.startLocalOnlyHotspot(new WifiManager.LocalOnlyHotspotCallback(){
+                @Override
+                public void onStarted(WifiManager.LocalOnlyHotspotReservation reservation) {
+                    super.onStarted(reservation);
+                    Log.d("rough","started");
+                }
+
+                @Override
+                public void onFailed(int reason) {
+                    super.onFailed(reason);
+                    Log.d("rough","failed");
+                }
+
+                @Override
+                public void onStopped() {
+                    super.onStopped();
+                    Log.d("rough","stopped");
+                }
+            }, new Handler());
+        }
     }
 
     private String getIpAddress() {
@@ -86,6 +118,9 @@ public class ServerActivity extends AppCompatActivity implements View.OnClickLis
                 break;
         }
     }
+
+
+
 
     public class ServerThread extends AsyncTask<String, Void, Boolean>{
 

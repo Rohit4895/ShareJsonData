@@ -2,6 +2,9 @@ package com.example.sharejsondata;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.content.Context;
+import android.net.wifi.WifiConfiguration;
+import android.net.wifi.WifiManager;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.text.TextUtils;
@@ -13,6 +16,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import java.io.DataInputStream;
+import java.lang.reflect.Method;
 import java.net.InetAddress;
 import java.net.Socket;
 
@@ -21,6 +25,7 @@ public class ClientActivity extends AppCompatActivity implements View.OnClickLis
     private TextView showJson;
     private Button receiveData;
     private String serverIpAddress="";
+    private WifiManager wifiManager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -30,6 +35,11 @@ public class ClientActivity extends AppCompatActivity implements View.OnClickLis
         getIp = findViewById(R.id.getIp);
         showJson = findViewById(R.id.showJson);
         receiveData = findViewById(R.id.receiveClient);
+
+        turnOnWifi(this);
+        wifiManager = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
+
+
         receiveData.setOnClickListener(this);
     }
 
@@ -45,6 +55,15 @@ public class ClientActivity extends AppCompatActivity implements View.OnClickLis
                 break;
         }
     }
+
+    private static void turnOnWifi(Context context){
+        WifiManager wifiManager = (WifiManager) context.getSystemService(Context.WIFI_SERVICE);
+        if(!wifiManager.isWifiEnabled())
+        {
+            wifiManager.setWifiEnabled(true);
+        }
+    }
+
 
     public class ClientThread extends AsyncTask<Void, Void, String> {
 

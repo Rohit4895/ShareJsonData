@@ -17,6 +17,9 @@ import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
 import android.net.Uri;
+import android.net.wifi.WifiConfiguration;
+import android.net.wifi.WifiManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.provider.Settings;
@@ -27,18 +30,22 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import java.io.IOException;
+import java.lang.reflect.Method;
 import java.util.List;
 import java.util.Locale;
 
 import static android.Manifest.permission.ACCESS_COARSE_LOCATION;
 import static android.Manifest.permission.ACCESS_FINE_LOCATION;
 
-public class MainActivity extends AppCompatActivity implements View.OnClickListener, LocationListener, GpsUtils.OnGpsListener {
+public class MainActivity extends AppCompatActivity implements View.OnClickListener,
+        LocationListener, GpsUtils.OnGpsListener {
 
     private Button send, receive;
     private final int MY_PERMISSION_REQUEST = 1;
     private TextView locationUpdates;
     private LocationManager locationManager;
+    private WifiManager wifiManager;
+    private WifiConfiguration wifiConfiguration;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -52,12 +59,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         send.setOnClickListener(this);
         receive.setOnClickListener(this);
 
-        //turnGPSOn();
+        wifiManager = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
 
-
-
-
-         locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+        locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
 
         if ((ContextCompat.checkSelfPermission(this, ACCESS_FINE_LOCATION)
                 != PackageManager.PERMISSION_GRANTED)
@@ -103,6 +107,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 break;
         }
     }
+
 
     private void showMessage(String message){
 
@@ -188,35 +193,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     public void onProviderDisabled(String s) {
 
     }
-
-   /* private void turnGPSOn(){
-        Log.d("rough","GPS On");
-        String provider = Settings.Secure.getString(getContentResolver(), Settings.Secure.LOCATION_PROVIDERS_ALLOWED);
-
-        if(!provider.contains("gps")){ //if gps is disabled
-            final Intent poke = new Intent();
-            poke.setClassName("com.android.settings",
-                    "com.android.settings.widget.SettingsAppWidgetProvider");
-            poke.addCategory(Intent.CATEGORY_ALTERNATIVE);
-            poke.setData(Uri.parse("3"));
-            sendBroadcast(poke);
-        }
-    }
-
-    private void turnGPSOff(){
-        Log.d("rough","GPS Off");
-        String provider = Settings.Secure.getString(getContentResolver(), Settings.Secure.LOCATION_PROVIDERS_ALLOWED);
-
-        if(provider.contains("gps")){ //if gps is enabled
-            final Intent poke = new Intent();
-            poke.setClassName("com.android.settings",
-                    "com.android.settings.widget.SettingsAppWidgetProvider");
-            poke.addCategory(Intent.CATEGORY_ALTERNATIVE);
-            poke.setData(Uri.parse("3"));
-            sendBroadcast(poke);
-        }
-    }*/
-
 
 
     @Override
