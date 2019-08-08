@@ -1,6 +1,7 @@
 package com.example.sharejsondata;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
@@ -14,7 +15,6 @@ import android.content.pm.PackageManager;
 import android.location.Address;
 import android.location.Geocoder;
 import android.location.Location;
-import android.location.LocationListener;
 import android.location.LocationManager;
 import android.net.Uri;
 import android.net.wifi.WifiConfiguration;
@@ -29,6 +29,12 @@ import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.location.LocationListener;
+import com.google.android.gms.location.LocationRequest;
+import com.google.android.gms.location.LocationServices;
+
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.util.List;
@@ -38,14 +44,18 @@ import static android.Manifest.permission.ACCESS_COARSE_LOCATION;
 import static android.Manifest.permission.ACCESS_FINE_LOCATION;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener,
-        LocationListener, GpsUtils.OnGpsListener {
+        GpsUtils.OnGpsListener, GoogleApiClient.ConnectionCallbacks,
+GoogleApiClient.OnConnectionFailedListener, LocationListener {
 
     private Button send, receive;
     private final int MY_PERMISSION_REQUEST = 1;
     private TextView locationUpdates;
     private LocationManager locationManager;
     private WifiManager wifiManager;
-    private WifiConfiguration wifiConfiguration;
+    private Location mLocation;
+    private GoogleApiClient mGoogleApiClient;
+    private LocationRequest mLocationRequest;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -61,20 +71,80 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         wifiManager = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
 
-        locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+        mGoogleApiClient = new GoogleApiClient.Builder(this)
+                .addApi(LocationServices.API)
+                .addConnectionCallbacks(this)
+                .addOnConnectionFailedListener(this)
+                .build();
 
         if ((ContextCompat.checkSelfPermission(this, ACCESS_FINE_LOCATION)
                 != PackageManager.PERMISSION_GRANTED)
                 && (ContextCompat.checkSelfPermission(this, ACCESS_COARSE_LOCATION)
                 != PackageManager.PERMISSION_GRANTED)) {
 
-            askPermission();
-        }else{
+                askPermission();
+
+        } else {
             new GpsUtils(this).turnGPSOn(this);
-            locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER,
-                    2000, 10, this);
+            getLocation();
         }
     }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        if (mGoogleApiClient != null) {
+            mGoogleApiClient.connect();
+        }
+    }
+
+
+
+    private void getLocation() {
+
+        if ((ContextCompat.checkSelfPermission(this, ACCESS_FINE_LOCATION)
+                != PackageManager.PERMISSION_GRANTED)
+                && (ContextCompat.checkSelfPermission(this, ACCESS_COARSE_LOCATION)
+                != PackageManager.PERMISSION_GRANTED)) {
+            Log.d("rough","permission not granted:");
+            return;
+        }
+        Log.d("rough","getLocation:");
+        mLocation = LocationServices.FusedLocationApi.getLastLocation(mGoogleApiClient);
+
+
+        if(mLocation!=null)
+        {
+            locationUpdates.setText("Latitude : "+mLocation.getLatitude()+" , Longitude : "+mLocation.getLongitude());
+        }
+
+        startLocationUpdates();
+    }
+
+    protected void startLocationUpdates() {
+        mLocationRequest = new LocationRequest();
+        mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+        mLocationRequest.setInterval(0);
+        mLocationRequest.setFastestInterval(0);
+        if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            Toast.makeText(getApplicationContext(), "Enable Permissions", Toast.LENGTH_LONG).show();
+        }
+
+        LocationServices.FusedLocationApi.requestLocationUpdates(
+                mGoogleApiClient, mLocationRequest, this);
+
+
+    }
+
+    public void stopLocationUpdates()
+    {
+        if (mGoogleApiClient.isConnected()) {
+            LocationServices.FusedLocationApi
+                    .removeLocationUpdates(mGoogleApiClient, this);
+            mGoogleApiClient.disconnect();
+        }
+    }
+
 
     private void askPermission() {
         ActivityCompat.requestPermissions(this, new String[]{ACCESS_FINE_LOCATION,
@@ -89,17 +159,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                         && grantResults[1] == PackageManager.PERMISSION_GRANTED) {
 
 
-
-                    if ((ContextCompat.checkSelfPermission(this, ACCESS_FINE_LOCATION)
-                            != PackageManager.PERMISSION_GRANTED)
-                            && (ContextCompat.checkSelfPermission(this, ACCESS_COARSE_LOCATION)
-                            != PackageManager.PERMISSION_GRANTED)) {
-
-                        return;
-                    }
                     new GpsUtils(this).turnGPSOn(this);
-                    locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER,
-                            2000, 1, this);
+                    getLocation();
 
                 }else{
                     showMessage("It is mandatory to accept all permissions...");
@@ -149,50 +210,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     @Override
     public void onLocationChanged(Location location) {
-
-        Toast.makeText(
-                getBaseContext(),
-                "Location changed: Lat: " + location.getLatitude() + " Lng: "
-                        + location.getLongitude(), Toast.LENGTH_SHORT).show();
-        String longitude = "Longitude: " + location.getLongitude();
-        Log.d("rough", longitude);
-        String latitude = "Latitude: " + location.getLatitude();
-        Log.d("rough", latitude);
-
-        /*------- To get city name from coordinates -------- */
-        String cityName = null;
-        Geocoder gcd = new Geocoder(getBaseContext(), Locale.getDefault());
-        List<Address> addresses;
-        try {
-            addresses = gcd.getFromLocation(location.getLatitude(),
-                    location.getLongitude(), 1);
-            if (addresses.size() > 0) {
-                System.out.println(addresses.get(0).getLocality());
-                cityName = addresses.get(0).getLocality();
-            }
-        }
-        catch (IOException e) {
-            e.printStackTrace();
-        }
-        String s = longitude + "\n" + latitude + "\n\nMy Current City is: "
-                + cityName;
-        locationUpdates.setText(s);
+        if(location!=null)
+            locationUpdates.setText("Latitude : "+location.getLatitude()+" , Longitude : "+location.getLongitude());
     }
 
-    @Override
-    public void onStatusChanged(String s, int i, Bundle bundle) {
 
-    }
 
-    @Override
-    public void onProviderEnabled(String s) {
 
-    }
-
-    @Override
-    public void onProviderDisabled(String s) {
-
-    }
 
 
     @Override
@@ -204,5 +228,20 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     @Override
     public void gpsStatus(boolean isGPSEnable) {
         Log.d("rough","Gps Status: "+isGPSEnable);
+    }
+
+    @Override
+    public void onConnected(@Nullable Bundle bundle) {
+       // getLocation();
+    }
+
+    @Override
+    public void onConnectionSuspended(int i) {
+
+    }
+
+    @Override
+    public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
+
     }
 }
