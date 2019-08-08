@@ -6,24 +6,46 @@
     android:layout_height="match_parent"
     tools:context=".MainActivity">
 
+    <TextView
+        android:id="@+id/locationDisplay"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="16dp"
+        android:layout_marginEnd="8dp"
+        android:text="Location Display: "
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/locationUpdates"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:textAlignment="center"
+        android:text="Location Updates"
+        app:layout_constraintTop_toBottomOf="@+id/locationDisplay"
+        tools:layout_editor_absoluteX="0dp" />
+
     <Button
         android:id="@+id/senderButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="288dp"
-        android:layout_marginEnd="44dp"
+        android:layout_marginTop="228dp"
+        android:layout_marginEnd="48dp"
         android:text="send"
         app:layout_constraintEnd_toStartOf="@+id/receiverButton"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toBottomOf="@+id/locationUpdates" />
 
     <Button
         android:id="@+id/receiverButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="288dp"
-        android:layout_marginEnd="56dp"
+        android:layout_marginTop="228dp"
+        android:layout_marginEnd="60dp"
         android:text="receive"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toBottomOf="@+id/locationUpdates" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
