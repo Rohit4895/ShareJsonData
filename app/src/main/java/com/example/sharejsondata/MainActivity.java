@@ -77,6 +77,10 @@ GoogleApiClient.OnConnectionFailedListener, LocationListener {
                 .addOnConnectionFailedListener(this)
                 .build();
 
+        if (mGoogleApiClient != null) {
+            mGoogleApiClient.connect();
+        }
+
         if ((ContextCompat.checkSelfPermission(this, ACCESS_FINE_LOCATION)
                 != PackageManager.PERMISSION_GRANTED)
                 && (ContextCompat.checkSelfPermission(this, ACCESS_COARSE_LOCATION)
@@ -85,20 +89,23 @@ GoogleApiClient.OnConnectionFailedListener, LocationListener {
                 askPermission();
 
         } else {
+
             new GpsUtils(this).turnGPSOn(this);
-            getLocation();
+            //getLocation();
         }
     }
 
     @Override
     protected void onStart() {
         super.onStart();
-        if (mGoogleApiClient != null) {
-            mGoogleApiClient.connect();
-        }
+
     }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
 
+    }
 
     private void getLocation() {
 
@@ -222,7 +229,7 @@ GoogleApiClient.OnConnectionFailedListener, LocationListener {
     @Override
     protected void onDestroy() {
         super.onDestroy();
-
+        stopLocationUpdates();
     }
 
     @Override
@@ -232,7 +239,7 @@ GoogleApiClient.OnConnectionFailedListener, LocationListener {
 
     @Override
     public void onConnected(@Nullable Bundle bundle) {
-       // getLocation();
+       getLocation();
     }
 
     @Override

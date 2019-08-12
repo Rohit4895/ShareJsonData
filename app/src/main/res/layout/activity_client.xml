@@ -14,6 +14,14 @@
         app:layout_constraintTop_toTopOf="parent"
         tools:layout_editor_absoluteX="0dp" />
 
+    <Button
+        android:id="@+id/connectClient"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:text="Connect To server"
+        app:layout_constraintTop_toBottomOf="@+id/getIp"
+        tools:layout_editor_absoluteX="0dp" />
 
     <Button
         android:id="@+id/receiveClient"
@@ -21,7 +29,7 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
         android:text="receive"
-        app:layout_constraintTop_toBottomOf="@+id/getIp"
+        app:layout_constraintTop_toBottomOf="@+id/connectClient"
         tools:layout_editor_absoluteX="0dp" />
 
     <TextView

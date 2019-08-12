@@ -32,6 +32,7 @@ public class ServerActivity extends AppCompatActivity implements View.OnClickLis
     private String strFirstName="", strLastName="";
     private TextView status;
     private WifiManager wifiManager;
+    private WifiManager.LocalOnlyHotspotReservation mReservation;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -47,15 +48,24 @@ public class ServerActivity extends AppCompatActivity implements View.OnClickLis
 
         status.setText(getIpAddress());
 
+        Log.d("rough","iP of Server: "+getIpAddress());
+
         send.setOnClickListener(this);
+
+        turnOnHotspot();
     }
 
     private void turnOnHotspot(){
+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+
             wifiManager.startLocalOnlyHotspot(new WifiManager.LocalOnlyHotspotCallback(){
                 @Override
                 public void onStarted(WifiManager.LocalOnlyHotspotReservation reservation) {
                     super.onStarted(reservation);
+
+                    mReservation = reservation;
+                    Toast.makeText(ServerActivity.this,"Hotspot ON...",Toast.LENGTH_SHORT).show();
                     Log.d("rough","started");
                 }
 
@@ -108,6 +118,7 @@ public class ServerActivity extends AppCompatActivity implements View.OnClickLis
                     JSONObject sendData = new JSONObject();
                     sendData.put("first",strFirstName);
                     sendData.put("last",strLastName);
+                    Log.d("rough","onClick Send");
                     new ServerThread().execute(sendData.toString());
                 }catch (Exception e){
                     e.printStackTrace();
@@ -127,6 +138,7 @@ public class ServerActivity extends AppCompatActivity implements View.OnClickLis
         @Override
         protected Boolean doInBackground(String... jsonString) {
             try{
+                Log.d("rough","serve background");
                 ServerSocket serverSocket = new ServerSocket(8888);
                 Socket client = serverSocket.accept();
 
@@ -145,9 +157,18 @@ public class ServerActivity extends AppCompatActivity implements View.OnClickLis
 
         @Override
         protected void onPostExecute(Boolean status) {
+            Log.d("rough","server post"+status);
             if (status){
                 Toast.makeText(getApplicationContext(),"Data Posted...",Toast.LENGTH_SHORT).show();
             }
         }
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+
+        if (mReservation != null)
+            mReservation.close();
     }
 }
